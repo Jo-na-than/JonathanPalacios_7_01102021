@@ -182,3 +182,31 @@ exports.login = (req, res) => {
         })
         .catch((error) => res.status(500).json({error})) // Erreur de serveur pour la requete
 }
+
+// Route pour refresh un token expiré
+exports.refreshToken = (req, res) => {
+    let refreshtoken = req.cookies.refreshtoken;
+    // S'il y a pas cookie de refreshtoken, demander login
+    if (!refreshtoken){
+        return res.status(403).send("veuillez connecter")
+    }
+    else {
+        // Verify the refresh token
+        
+        try{
+            jwt.verify(refreshtoken, process.env.REFRESH_TOKEN)
+        }
+        catch(e){
+            console.log(e);
+            return res.status(401).send("error avec ce token"); 
+        }
+
+        // Creer un nouveau token et envoyer au frontend
+        let newToken = jwt.sign(            
+            {userId: req.params.id },
+            process.env.SECRET_TOKEN, 
+            {expiresIn: "2m",})
+        // Envoyer au client nouveau token
+        res.status(201).json(newToken)
+    }
+};
