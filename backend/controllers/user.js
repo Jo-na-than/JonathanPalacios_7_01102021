@@ -690,3 +690,125 @@ exports.getAllUser = (req, res) => {
             res.status(400).json("Pas trouvé user, actions interdites")
         })
 }
+
+// ===> route pour forgot password <===
+exports.forgotPassword = async (req, res) => {
+    // encrypt email entrée
+    let emailLogin = encrypt(req.body.email)
+
+    // comparer ce email avec celui dans BDD user based on email
+    const user = await db.Users.findOne ( { where: {email: emailLogin } })
+    try {
+        // user pas trouvé
+        if ( ! user ) {return res.status(404).json({ message: " Utilisateur non trouvé avec email "})}
+
+        // 2) User trouvé => Generate random reset token
+        else { 
+             //token expires after one hour 
+                let userObject= user
+                const resetToken = jwt.sign(            //créer un token 
+                    {userId: user.id },
+                    process.env.SECRET_TOKEN, 
+                    {expiresIn: "1h",});
+
+                // hash ce token pour plus de sécurité     
+                const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex')
+                console.log({resetToken}, { resetTokenHash});      //OK
+            
+                // update BDD avec ce resetTokenHash
+            db.Users.update (
+                {...userObject,
+                    email: emailLogin,
+                    createPasswordResetToken: resetTokenHash
+                },
+                {where: { email: emailLogin} }
+                )
+                .then( () => { console.log(" Reset Token réussi")})
+                .catch( error => {
+                    res.status(404).json({message: "Problème pour update token user"});
+                    console.log(error);
+                } )
+                
+            // 3) Send token to user email
+            const resetURL = `${req.protocol}://${process.env.GROUPO_HOST}/reset/${resetToken}`;
+                // avec ce message, format HTML
+            const message = `<p>Password oublié? Cliquez sur ce link pour changer votre password (valabe pour 1 heure) </p> <br> <a href="${resetURL}">${resetURL}</a>  <br> Si ce n'est pas le cas, ignorez ce message</p>`  ;
+
+            // envoyer email à user 
+            await sendEmail( {
+                email: req.body.email,
+                subject: "Groupomania, reset password ( valide pour 2 heures )",
+                message
+            })
+                .then( () => {return res.status(200).json( { message: "Verifier votre email pour reset password"})}) 
+                .catch ( err => {
+                    console.log(err)
+                    res.status(500).json({ message: "Problème pour envoyer email"})
+                // en cas de pb d'envoie, réinitialiser le colonne resetPassword à undefined
+                    db.Users.update (
+                        {...userObject,
+                            email: emailLogin,
+                            createPasswordResetToken: 'undefined'
+                        },
+                        {where: { email: emailLogin} }
+                        )
+                        .then( () =>console.log(" ResetToken effacé") )
+                        .catch( (e) =>{console.log(e);res.json({message: "Problème pour effacé resetToken user"})}) 
+                })
+        }
+    } catch (err) { console.log(err) }
+}
+
+// ===> route pour reset password <===
+exports.resetPassword = async (req, res) => {
+    // 1) Récupérer user selon token
+    try {
+        const resetToken = req.params.token;
+        // vérifier si token n'est pas expiré
+        jwt.verify(resetToken, 'RANDOM_TOKEN_SECRET', function (err) {
+            if (err) { 
+                console.log(err);
+               return res.status(400).json({message: "token expired"})
+            }
+            else {
+                // 2) Si token est encore valide, comparer avec celui dans BDD
+                const hashToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+                // chercher user avec la colonne qui a ce token
+                const user= db.Users.findOne( { where: {
+                    createPasswordResetToken: hashToken,
+                    }
+                })
+                    if ( !user ) {          // si pas user
+                           return res.status(400).json({ message: "Token invalid, user non trouvé"})
+                        }
+                    else {
+                        // valider password avec password-validator
+                        if(!schema.validate(req.body.password)) {return res.status(400).json({message: " Password doit avoir 8 et 20 characters, 1 majuscule, 1 minuscule, 1 symbol"})}
+                        // 3) Si user est présent, Update nouveau password
+                        bcrypt.hash(req.body.password, 10)
+                            .then( hash => {
+                                db.Users.update( {
+                                    ...user,
+                                    password: hash,
+                                    createPasswordResetToken: "undefined",
+                                    }, 
+                                    { where: {createPasswordResetToken: hashToken}} )
+                                    
+                                //4) Envoyer nouveau token pour login
+                                const token = jwt.sign(            
+                                    {userId: user.id },
+                                    process.env.SECRET_TOKEN, 
+                                    {expiresIn: "1m",});
+                                        
+                                res.status(200).json( {
+                                        message: "Password reset avec succès",
+                                        token,
+                                    })
+                                })
+                            .catch(() => res.status(400).json( {message: 'Problème server pour chercher user'}))
+                        }
+            }
+        })
+    } 
+    catch (e) { console.log(e) }
+}
