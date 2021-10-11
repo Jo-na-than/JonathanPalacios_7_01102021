@@ -53,3 +53,68 @@ exports.getAllPosts = (req, res) => {
       })
       .catch((error) => res.status(500).json(error));
 };
+
+// ===> Routes pour update 1 post <===
+exports.updatePost = (req, res) => {
+    let newFile_url=""
+    // Chercher le post avec son id
+    db.Posts.findOne ( { where:  { id: req.params.postId}} )
+        .then( (post) => {
+
+            // Verifier si c'est bien le user avant de faire update
+            if (post.userId != req.params.id ) {
+              return  res.status(400).json("Echec! Vous n'êtes pas auteur du pubication.")
+            }
+            else {
+                // Update sans file
+                if (!req.file) {
+                    
+                        db.Posts.update({
+                            ...post,
+                            content: xss(req.body.content),},
+                        {where: {id: req.params.postId}})
+                            .then( () => res.status(200).json("Update publication réussi"))
+                            .catch( err => res.status(500).json({
+                                message: "Erreur en update publication",
+                                err: err
+                            }))
+                    }
+                
+                
+                // Update avec file
+                else {
+                    console.log(req.file)
+                    // Si update avec photos,
+                    if (req.file != "undefined" || req.file !="") {          
+                        let filenames = post.img_url;       // Cherche nom anciennes photos
+                        // Les supprimer
+                        fs.unlink(`images/${filenames}`, () => {
+                            console.log("images supprimé")});         
+
+                        // Puis récupérer nouveaux files
+                            
+                            newFile_url = (req.file.filename);
+                            
+                                db.Posts.update({
+                                    img_url: newFile_url,
+                                    content: xss(req.body.content),
+                                    },
+                                    {where: {id: req.params.postId}})
+                                    .then( () => res.status(200).json("Update publication réussi"))
+                                    .catch( err => res.status(500).json({
+                                        message: "Erreur en update publication",
+                                        err: err
+                                    }))
+                            
+                    }
+                }
+            }
+        })
+        .catch ( err => {
+            // console.log(err);
+            res.status(500).json({
+                message:"Problème chercher publication par server",
+                err: err
+            })
+        })
+}
