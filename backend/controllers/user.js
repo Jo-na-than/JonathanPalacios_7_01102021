@@ -216,3 +216,100 @@ exports.logout = (req, res) => {
     res.clearCookie('refreshtoken')         //supprimer le cookie refreshtoken
     res.send('supprimer cookie')                     
 };
+
+// Route pour que l'user supprime son compte
+exports.deleteUser = (req, res) => {
+    // chercher user dans BDD
+    db.Users.findOne({where: {id: req.params.id}})
+        .then( user => {
+            console.log("user" + user);      // OK
+            console.log(req.body.password);
+            if(!user) { // Si user n'existe pas dans bdd
+                return res.status(401).json({error: 'Utilisateur non trouvé'}) // Renvoyer message erreur
+            }
+            // Si user trouvé, comparer password du requête avec celui dans BDD
+            bcrypt.compare(req.body.password, user.password)
+                .then( valid => {
+                    if (!valid) {           // si c'est pas le même password
+                        return res.status(401).json({ error: 'Mot de passe incorrect'})
+                    }
+                    
+                    // Si password est le même, chercher avatar et effacer
+                    else {
+                        const filename = user.avatar
+                        // Si user a son avatar => effacer de le mémoire                  
+                        if( !filename.includes("avatar_default.png")) {
+                            console.log(filename);
+                            fs.unlink(`images/${filename}`, () => {
+                                console.log("Avatar supprimé")
+                            })
+                        }
+                    }
+                })
+                .catch( error => { 
+                    console.log(error);
+                    res.status(500).json( { message: "Problème comparer le password"})
+                })
+        })
+
+            // Supprimer les likes de ce user
+            db.likes.findAll({ where: { userId: req.params.id } })
+                .then( likes => {
+                    // Si user n'a pas de like
+                    if (!likes) { console.log("User n'a pas like")}
+                    // Si user a des likes, supprimer ses likes
+                    else {
+                        db.likes.destroy({ where: { userId: req.params.id } })
+                            .then( () => {console.log("Supprimer likes du utilisateur")})
+                            .catch( err => console.log(err))
+                    }
+                })
+
+            // Supprimer les commentaires du user
+            db.commentaires.findAll({ where: { userId: req.params.id } })
+                .then(commentaires => {
+                    // Pas de commentaires
+                    if (! commentaires) { console.log("Pas de commentaire de ce user")}
+                    // Commentaires trouvé
+                    else {
+                        db.commentaires.destroy({ where: { userId: req.params.id } })
+                            .then( () => console.log("Supprimer commentaires d'utilisateur"))
+                            .catch( err => console.log(err))
+                    }
+                })
+            
+            // Chercher les publications de ce user
+            db.Posts.findAll({ where: { userId: req.params.id } })
+                .then((posts) => {
+                    // Si user n'a pas de publication
+                    if (!posts) {
+                        console.log("user n'a pas de publication")
+                    }
+                    else {
+                            // Chercher les images, video et effacer dans mémoire
+                        for ( let i=0; i<posts.length; i++) {
+                            if (posts[i].img_url !="") {
+                            let filenames = posts[i].img_url
+                            fs.unlink(`images/${filenames}`, () => {console.log("images supprimé");});
+                            }
+                        }
+                            // Supprimer les publications
+                        db.Posts.destroy({ where: { userId: req.params.id } })
+                            .then(() => console.log("Supprimer les publications d'utilisateur")
+                            )
+                            .catch( err => console.log(err))
+                    }     
+                })
+
+        // Supprimer ce user
+        .then( () => {
+            db.Users.destroy ({where: {id:req.params.id}})
+            .then( () => res.status(200).json("utilisateur supprimé"))
+            .catch( err=> console.log(err))
+        })
+               
+        .catch(error => { 
+            console.log(error); 
+            res.status(500).json( { message: "Problème pour trouver l'utilisateur, réessayer plus tard"})
+        })
+}
