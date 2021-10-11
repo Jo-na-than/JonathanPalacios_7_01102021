@@ -422,6 +422,60 @@ exports.adminChange = (req, res) => {
         .catch(err => {
             console.log(err)
             res.status(500).json("problème de trouver cet admin")
+        }) 
+}
+
+// ==> route pour update user password <===
+exports.updatePassword = (req, res) => {
+    let newPass = req.body.newPass;
+    let oldPass = req.body.oldPass;
+    console.log( {newPass});
+    console.log( {oldPass});
+
+    // 1) Get user from database by Id
+    db.Users.findOne ( { where: { id: req.params.id}})
+        .then( user => {
+    // 2) Check if the POSTED password is correct
+            bcrypt.compare(oldPass, user.password)
+                .then( valid => {
+                    // si password pas correct => erreur
+                    if (! valid) {
+                      return  res.status(400).json( { message: "Password incorrect"})
+                    }
+                    // 3) If password correct, update user with new hash password
+                    else {
+                        bcrypt.hash(newPass, 10)
+                        .then( hash => {
+                            db.Users.update( {
+                                ...req.body,
+                                password: hash,
+                                id: req.params.id
+                            },
+                            {where: { id: req.params.id}} )
+                        // 4) Send JWT, login user
+                            const token = jwt.sign(            
+                                {userId: user.id },
+                                process.env.SECRET_TOKEN, 
+                                {expiresIn: "1m",});
+                                    
+                            res.status(200).json( {
+                                    message: "Password reset avec succès",
+                                    token,
+                            })
+                        })
+                        .catch( err => {
+                            console.log(err);
+                            res.status(500).json( {message: "Problème pour update password"})
+                        })
+                    }
+                })
+                .catch( err => {
+                    console.log(err);
+                    res.status(500).json( { message: "Problème pour comparer les passwords"})
+                })        
         })
-    
+        .catch( err => { 
+            console.log(err);
+            res.status(500).json( { message: "Problème server, pas trouvé user"})
+        })
 }
