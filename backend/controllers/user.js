@@ -664,7 +664,7 @@ exports.getOneUser = (req, res) => {
 }
 
 
-// ===> route pour récupérer tous les utilisateurs (pour admin par expemple) <===
+// ===> route pour récupérer tous les utilisateurs (pour admin par exemple) <===
 exports.getAllUser = (req, res) => {
     // vérifier si user connecté est admin ou pas?
     db.Users.findOne ( { where: { id: req.params.id }})
