@@ -27,3 +27,9 @@ schema
     .has().not().spaces()                           // Doit contenir aucun espace
     .is().not().oneOf(["Passw0rd", "Password123"])  // Mot de passes blacklistés
     .has(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&.])[A-Za-z\d@$!%*#?&.]{8,}$/)  // regex pour password fort
+
+// Fonction pour crypter et décrypter email
+// Key et Iv  pour crypto
+let key = crypto.createHash("sha256").update("OMGCAT!", "ascii").digest();
+let iv = "1234567890123456"
+let algorithm = 'aes-256-ctr'
