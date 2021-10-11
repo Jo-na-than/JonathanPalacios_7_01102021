@@ -141,3 +141,35 @@ exports.getUserPosts = (req, res) => {
       })
       .catch((error) => res.status(500).json(error));
 }
+
+// ===> Route pour supprimer post <===
+exports.deletePost = (req, res) => {
+    // Chercher post avec son id
+    db.Posts
+      .findOne({ where: { id: req.params.postId } })
+      .then((post) => {     
+          // Chercher les images, video et effacer
+            if (post.img_url !="") {
+                let filenames = post.img_url
+                fs.unlink(`images/${filenames}`, () => {console.log("images supprimé");});
+            }
+      })
+        // Supprimer dans table likes
+    .then(() => {
+            db.likes.destroy({ where: { postId: req.params.postId } });
+        })
+        // Supprimer dans table commentaires
+    .then(() => {
+            db.commentaires.destroy({ where: { postId: req.params.postId } });
+        })
+        // Supprimer dans table posts
+    .then(() => {
+            db.Posts
+            .destroy({ where: { id: req.params.postId } })
+            .then(() =>
+                res.status(200).json({ message: "Publications supprimée !" })
+            )
+            .catch((error) => res.status(400).json({ error }));
+        })
+    .catch((error) => res.status(500).json({ error }));
+};
