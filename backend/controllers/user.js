@@ -662,3 +662,31 @@ exports.getOneUser = (req, res) => {
         })
         .catch(() => res.status(500).json({message: "problème connexion avec base de donnée"}))
 }
+
+
+// ===> route pour récupérer tous les utilisateurs (pour admin par expemple) <===
+exports.getAllUser = (req, res) => {
+    // vérifier si user connecté est admin ou pas?
+    db.Users.findOne ( { where: { id: req.params.id }})
+        .then( user => {
+            // s'il n'est pas admin; interdit les actions
+            if(user.isAdmin === false) {return res.status(400).json("Vous n'êtes pas admin")}
+            else {
+            // si user est admin, chercher tous les user, trier par id 
+                db.Users.findAll( {
+                    attributes: ["id","nom", "prenom", "pseudo", "createdAt", "isAdmin"]
+                },
+                {order: ["id"] })
+                    .then((users) => {
+                        if (! users) {return res.status(404).json({ message:"Utilisateur non trouvé" })}
+                        
+                        res.status(200).json({ users})
+                    })
+                    .catch((error) => res.status(404).json({error}))
+            }
+        })
+        .catch( err => {
+            console.log(err);
+            res.status(400).json("Pas trouvé user, actions interdites")
+        })
+}
