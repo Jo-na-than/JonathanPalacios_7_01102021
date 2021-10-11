@@ -385,3 +385,43 @@ exports.adminDelete = (req, res) => {
         })
         .catch ( err => { console.log(err); res.status(500).json("User non trouvé")})
 }
+
+// ===> route pour donner le role admin pour 1 user <===
+exports.adminChange = (req, res) => {
+    // vérifier si c'est bien un admin qui effectuer ce changement
+    db.Users.findOne ({where : { id: req.params.id} })
+        .then( user => {
+            // si ce n'est pas un admin, envoyer error
+            if (user.isAdmin == false) {
+              return res.status(400).json("Vous n'êtes pas admin, vous ne pouvez pas modifier les utilisateurs")
+            }
+            // si c'est bien admin, en chercher utilisateur pour attribuer son rôle
+            else {
+                db.Users.findOne ( {where : { id: req.params.userId} } )
+                    .then( user => {
+                        console.log(user.isAdmin);      // OK
+                        // update le rôle admin pour ce user
+                        db.Users.update( {
+                            ...user,
+                            isAdmin: true,
+                            id: req.params.userId
+                        },
+                        {where : { id: req.params.userId}} )
+                            .then( () => res.status(200).json("changer status admin du user"))
+                            .catch( err => {
+                                console.log(err);
+                                res.status(500).json("Problème pour changer status admin du user")
+                            })
+                    })
+                    .catch( err => {
+                        console.log(err);
+                        res.status(500).json("User non trouvé")
+                    })
+            }
+        })
+        .catch(err => {
+            console.log(err)
+            res.status(500).json("problème de trouver cet admin")
+        })
+    
+}
