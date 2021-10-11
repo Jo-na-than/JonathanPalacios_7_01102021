@@ -173,3 +173,43 @@ exports.deletePost = (req, res) => {
         })
     .catch((error) => res.status(500).json({ error }));
 };
+
+
+//====> Ajout ou suppression de like <====\\
+exports.createLike = (req, res) => {
+    // Chercher post avec id du user et du post
+    db.likes.findOne ( {where: {
+        postId: req.params.postId,
+        userId : req.params.userId
+    }} )
+        .then ( likes => {
+            if (likes) {
+                // Si ce user est déjà like ce post => supprimer ce like dans table likes
+                db.likes.destroy ( { where: {
+                    postId: req.params.postId,
+                    userId : req.params.userId
+                }} )
+                    .then ( () => res.status(200).json('Enlever likes du post'))
+                    .catch ( err => {
+                        console.log(err);
+                        res.status(500).json( 'Problème pour enlever likes du post')
+                    })
+            }
+                // Si ce user n'a pas like ce post => ajouter ce like dans table likes
+            else {
+                db.likes.create ({
+                    postId: req.params.postId,
+                    userId: req.params.userId,
+                })
+                    .then( () => res.status(201).json('Ajouter like au post'))
+                    .catch ( err => {
+                        console.log(err);
+                        res.status(500).json('Problème pour ajouter like')
+                    })
+            }
+        })
+        .catch ( err => {
+            console.log(err);
+            res.status(500).json("problème récupérer likes")
+        })
+};
