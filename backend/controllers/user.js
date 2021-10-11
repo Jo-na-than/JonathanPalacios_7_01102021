@@ -479,3 +479,159 @@ exports.updatePassword = (req, res) => {
             res.status(500).json( { message: "Problème server, pas trouvé user"})
         })
 }
+
+// ===> route pour update profile user <===
+exports.updateUser = (req, res) => {
+    // console.log(req.body);  // Ok
+    let avatarName = "";
+    let newPseudo = "";
+    
+    let newFonction = "";
+
+    // Chercher user avec son ID
+    db.Users.findOne ({ where: {id: req.params.id}} )
+        .then( user => {
+            // si update avec photo avatar
+            if (req.file) {
+                const file = user.avatar;
+                // si avatar du user est "avatar_default"; on fait rien
+                if( file.includes("avatar_default.png")) {
+                    console.log("file avatar_default rien à effacer");
+                }
+                // si non, on supprimer avatar dans le fichier images
+                else {
+                    fs.unlink(`images/${file}`, function (err) {
+                        if (err) { throw err; }
+                        // if no error, file has been deleted successfully
+                        else { 
+                            console.log('File deleted!');
+                        }
+                    })
+                }
+                // Puis update avatar dans BDD
+                
+                db.Users.update( {
+                    ...user,
+                    avatar: req.file.filename},
+                    {where: {id:req.params.id}})
+                    .then( () => { console.log("Update avatar réussi dans la table Users")})
+                    .catch(err => {
+                        console.log(err);
+                        res.status(500).json( {message: "Problème pour update avatar"})
+                    })
+                
+                // Puis update avatar dans BDD de commentaires
+                db.commentaires.findOne( {where:{userId: req.params.id} })
+                    .then( commentaire => {
+                        db.commentaires.update( {
+                            ...commentaire,
+                            userAvatar: req.file.filename},
+                            { where: {userId: req.params.id}})
+                            .then( () => {console.log("Update avatar réussi dans la table commentaires")})
+                            .catch( err => { 
+                                console.log(err);
+                                res.status(500).json("Problème update avatar dans la table commentaires")
+                            })
+                    })
+                    .catch( err => {
+                        console.log(err);
+                        res.status(500).json("Problème chercher ce user dans la table commentaires")
+                    })
+                
+                
+            }
+            
+            //si update avec email: vérifier si email est déjà utilisé dans BDD?
+            if (req.body.email.length >0 && req.body.email !="undefined") {
+                console.log("Il y a email dans update");
+
+                // valider email s'il est bon
+                if( !validator.isEmail(req.body.email)) {return res.status(400).json({message: " Email invalid"})}
+                // crypter email entrée afin de comparer avec celui dans BDD
+                else {
+                    let emailLogin = encrypt(req.body.email)
+                    console.log("emailLogin " + emailLogin)
+                    db.Users.findOne({where: {email: emailLogin}})
+                        .then( user => {
+                            // si email est déjà utilisé, envoyer 400
+                            if (user) {return res.status(400).json({message: "Email déjà utilisé"})}
+
+                            // si email n'est pas encore dans BDD, update user avec nouvel email
+                            
+                            db.Users.update({...user, email: emailLogin}, {where: {id:req.params.id}})
+                                .then( () => { console.log("Update email réussi")})
+                                .catch(err => {
+                                    console.log(err);
+                                    res.status(500).json( {message: "Problème pour update email"})
+                                })
+                        })
+                        .catch( err => { console.log(err); res.status(500).json("Problème chercher email");})
+                }
+                
+            }
+
+            //si update avec pseudo: vérifier si pseudo est déjà présenté dans BDD?
+            if (req.body.pseudo.length >0 && req.body.pseudo !="undefined") {
+               
+                db.Users.findOne({where: {pseudo:req.body.pseudo}})
+                    .then( user => {
+                        // si pseudo est déjà utilisé, envoyer 400
+                        if (user) {return res.status(400).json({message: "Pseudo déjà utilisé"})}
+
+                        else {
+                            // si pseudo n'est pas dans BDD, valider le pseudo entrée
+                            if (!validator.matches(req.body.pseudo, /^[a-z0-9éèàùûêâôë][a-z0-9éèàùûêâôë '-]+$/i)) {return res.status(400).json({message: " Pseudo doit être en lettre ou chiffre"})}
+                        
+                            // update user avec pseudo dans la table Users
+                            newPseudo = req.body.pseudo;
+                            db.Users.update( {...user, pseudo: newPseudo}, {where: {id:req.params.id}})
+                                .then( () => {console.log("Update pseudo réussi")})
+                                .catch(err => {
+                                    console.log(err);
+                                    res.status(500).json( {message: "Problème pour update pseudo dans la table Users"})
+                                })
+                            // update nouveau pseudo dans la table commentaires
+                            db.commentaires.findOne({where: {userId:req.params.id}} )
+                                .then( commentaire => {
+                                    db.commentaires.update( {...commentaire, userPseudo: newPseudo}, {where: {userId:req.params.id}})
+                                    .then( () => { console.log("Update pseudo dans la table commentaires")})
+                                    .catch(err => {
+                                        console.log(err);
+                                        res.status(500).json( {message: "Problème pour update pseudo dans la table commentaires"})
+                                    })
+                                })
+                                .catch(err => {
+                                    console.log(err);
+                                    res.status(500).json( {message: "Problème pour chercher pseudo dans la table commentaires"})
+                                })
+                            
+                        }
+                    })
+                    .catch( err => { console.log(err); res.status(500).json("Problème pour chercher pseudo")})
+            }
+
+            // si update avec fonction:
+            if(req.body.fonction.length >0 && req.body.fonction !="undefined") {
+                if ( !validator.matches(req.body.fonction, /^[a-zéèàùûêâôë][a-zéèàùûêâôë '-]+$/i)) { return res.status(400).json({message: " Fonction doit être en lettre et pas de charactèrs spéciaux"})}
+                newFonction = req.body.fonction;
+                console.log({newFonction});
+                // update user fonction
+                db.Users.update({...user,fonction: newFonction},{ where: {id: req.params.id}} )
+                    .then( () => {
+                        console.log("Update fonction réussi");
+                    } )
+                    .catch( err => {console.log(err); res.status(500).json("Problème update fonction")} )
+            }
+
+            // envoyer status 200 si tout va bien
+            res.status(200).json( {
+                message: "Update profil réussi",
+                
+            })
+            
+        })
+        .catch( err => {
+            console.log(err);
+            res.status(500).json({message: "Pb server, user non trouvé"})
+        })
+}
