@@ -213,3 +213,39 @@ exports.createLike = (req, res) => {
             res.status(500).json("problème récupérer likes")
         })
 };
+
+// ===> Récupérer les likes <===
+exports.getLike = (req, res) => {
+    models.likes
+      .findAll({ where: { postId: req.params.postId } })
+      .then((like) => {
+        res.status(200).json(like);
+      })
+      .catch((error) => res.status(500).json(error));
+};
+
+
+// ===> Création commentaire <===
+exports.createCommentaire = (req, res) => {
+    let regex = /[@&"()_$§*€£`+=\/;#]+$/;
+    // Valide le commentaire
+    if (validator.matches(req.body.commentaire, regex)) {
+    return res.status(400).json("Veuillez ne pas utiliser les characters spéciaux")
+    }
+    else {
+        console.log(req.body.commentaire)
+        // Créer le commentaire
+        db.commentaires.create({
+            commentaires: xss(req.body.commentaire),
+            postId: req.body.postId,
+            userId: req.body.userId,
+            userAvatar: req.body.userAvatar,
+            userPseudo: req.body.userPseudo
+        })
+            .then( () => res.status(201).json("Commentaire enregistré"))
+            .catch( err => res.status(500).json( {
+                message: "Problème pour enregistrer commentaire",
+                err: err
+            }))
+    }
+}
