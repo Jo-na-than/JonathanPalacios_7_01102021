@@ -124,3 +124,61 @@ exports.signup = ((req, res) => {
         .catch( () => res.status(500).json( { message: "Pb de server, impossible chercher email user"}))       
     }
 })
+
+// Route pour login
+exports.login = (req, res) => {
+    // Crypter email entrée afin de comparer avec celui dans BDD
+    let emailLogin = encrypt(req.body.email)
+    db.Users.findOne( {
+        // Chercher user avec son email
+        where: {email: emailLogin}})// trouver utilisateur avec email unique
+        .then( (user) => {
+            if(!user) { // Si user n'existe pas dans bdd
+                return res.status(401).json({error: 'Utilisateur non trouvé'}) // renvoyer message erreur
+            }
+            // Si user est trouvé, comparer le mot de passe entrée avec celui dans bdd
+            bcrypt.compare(req.body.password, user.password) 
+                .then((valid) => {
+                    if(!valid) { // Si mdp n'est pas valid, renvoyer error
+                        return res.status(401).json({ error: 'Mot de passe incorrect'})
+                    }
+                    // Si mdp correct, renvoyer user, et token
+                    else {
+
+                        let refreshToken = jwt.sign(      // un refreshtoken pour cookie
+                            {userId: user.id },
+                            process.env.REFRESH_TOKEN, 
+                            {expiresIn: "24h",})
+                        
+                        let token = jwt.sign(            // un token pour la connexion
+                            {userId: user.id },
+                            process.env.SECRET_TOKEN, 
+                            {expiresIn: "1m",})
+
+                        /* On créer le cookie contenant le refresh token */
+                        res.cookie('refreshtoken', refreshToken,
+                        {
+                            httpOnly: true,
+                            secure: false,
+                            sameSite: false,
+                            maxAge: "86400000"    // 24h en milisecond
+                        })
+
+                        res.status(200).json({ // Si mdp correct, envoyer user, token, refreshtoken                       
+                            currentUser: {
+                            userNom: user.nom,
+                            email: req.body.email, 
+                            userPseudo: user.pseudo,
+                            userId: user.id,
+                            avatar: user.avatar,
+                            isAdmin: user.isAdmin
+                            },
+                            token,
+                            refreshToken
+                        });
+                    };
+                })
+                .catch((error) => res.status(500).json({error}))
+        })
+        .catch((error) => res.status(500).json({error})) // Erreur de serveur pour la requete
+}
