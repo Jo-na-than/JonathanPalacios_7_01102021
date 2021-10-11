@@ -313,3 +313,75 @@ exports.deleteUser = (req, res) => {
             res.status(500).json( { message: "Problème pour trouver l'utilisateur, réessayer plus tard"})
         })
 }
+
+// ===> Route pour supprimer 1 user par Admin <===
+exports.adminDelete = (req, res) => {
+    // Chercher user avec son id
+    db.Users.findOne ( { where: { id: req.params.id}})
+        .then( user => {
+            // si user a son photo avatar, supprimer la photo avant supprimer le compte
+            const filename = user.avatar
+            if( !filename.includes("avatar_default.png")) {
+                console.log(filename);
+                fs.unlink(`images/${filename}`, () => {
+                    console.log("avatar supprimer")
+                })
+                
+            }        
+        })
+        // Supprimer les likes de ce user
+            db.likes.findAll({ where: { userId: req.params.id } })
+                .then( likes => {
+                    // Si user n'a pas de like
+                    if (!likes) { console.log("User n'a pas like")}
+                    // Si user a des likes, supprimer ses likes
+                    else {
+                        db.likes.destroy({ where: { userId: req.params.id } })
+                            .then( () => console.log("Supprimer likes d'utilisateur"))
+                            .catch (err => console.log(err))
+                    }
+                })
+
+            // Supprimer les commentaires du user
+            db.commentaires.findAll({ where: { userId: req.params.id } })
+                .then(commentaires => {
+                    // Pas de commentaires
+                    if (! commentaires) { console.log("Pas de commentaire de ce user")}
+                    // Commentaires trouvé
+                    else {
+                        db.commentaires.destroy({ where: { userId: req.params.id } })
+                            .then( () => console.log("Supprimer les commentaires d'utilisateur"))
+                            .catch( err => console.log(err)) 
+                    }
+                })
+            
+            // Chercher les publications de ce user
+            db.Posts.findAll({ where: { userId: req.params.id } })
+                .then((posts) => {
+                    // Si user n'a pas de publication
+                    if (!posts) {
+                        console.log("user n'a pas de publication")
+                    }
+                    else {
+                        // Chercher les images, video et effacer
+                        for ( let i=0; i<posts.length; i++) {
+                            if (posts[i].img_url !="") {
+                            let filenames = posts[i].img_url
+                            fs.unlink(`images/${filenames}`, () => {console.log("images supprimé");});
+                            }
+                        }
+                        
+                        db.Posts.destroy({ where: { userId: req.params.id } })
+                            .then( () => console.log("Supprimer les publications d'utilisateur"))
+                            .catch( err => console.log(err))
+                    }     
+                })
+        
+        // Supprimer ce user
+        .then( () => {
+            db.Users.destroy ({where: {id:req.params.id}})
+            .then( () => res.status(200).json("utilisateur supprimé par admin"))
+            .catch( err => console.log(err))
+        })
+        .catch ( err => { console.log(err); res.status(500).json("User non trouvé")})
+}
