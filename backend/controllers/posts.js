@@ -31,3 +31,25 @@ exports.createPost = (req, res) => {
             })
     
 }
+
+// ===> Route pour récupérer tous les publications <===
+exports.getAllPosts = (req, res) => {
+    // Chercher les posts avec likes et commentaires et user
+    models.posts.findAll({
+        include: [ 
+            {model: models.likes},
+            {model: models.commentaires},
+            {model: models.users,
+                    attributes: ['avatar', 'pseudo']}
+         ],
+        order: [
+            ["id", "DESC"],
+            [models.commentaires, "id", 'DESC']
+        ],
+      })
+      // Envoyer tous les posts au client side
+      .then((posts) => {
+        res.status(200).json(posts);
+      })
+      .catch((error) => res.status(500).json(error));
+};
