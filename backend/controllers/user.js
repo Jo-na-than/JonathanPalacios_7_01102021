@@ -33,3 +33,11 @@ schema
 let key = crypto.createHash("sha256").update("OMGCAT!", "ascii").digest();
 let iv = "1234567890123456"
 let algorithm = 'aes-256-ctr'
+
+// Fonction pour encrypter
+function encrypt(text){
+    var cipher = crypto.createCipheriv(algorithm, key, iv)
+    var crypted = cipher.update(text,'utf8','hex')
+    crypted += cipher.final('hex');
+    return crypted;
+}
