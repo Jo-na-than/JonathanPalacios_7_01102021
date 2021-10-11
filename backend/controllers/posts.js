@@ -118,3 +118,26 @@ exports.updatePost = (req, res) => {
             })
         })
 }
+
+// ===> Route pour récupérer post d'un user <===
+exports.getUserPosts = (req, res) => {
+    // Chercher tous les posts, likes, commentaires du user avec son id
+    models.posts
+      .findAll({
+        where: {userId: req.params.id},
+        include: [
+            {model: models.likes},
+            {model: models.commentaires},
+            {model: models.users,
+                    attributes: ['avatar', 'pseudo']}
+        ],
+        order: [
+            ["id", "DESC"], [models.commentaires, "id", 'DESC']
+        ],
+      })
+      // Envoyer tous au client side
+      .then((posts) => {
+        res.status(200).json(posts);
+      })
+      .catch((error) => res.status(500).json(error));
+}
