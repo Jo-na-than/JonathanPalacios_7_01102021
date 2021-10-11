@@ -14,3 +14,6 @@ const limiter = rateLimit({
   max: 100  // limit each IP to 100 requests per windowMs
 });
 const expressSanitizer = require('express-sanitizer');
+
+// Chargement du fichier .env pour garder secret les infos confidentiels
+require('dotenv').config(); 
