@@ -26,3 +26,35 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Credentials', true)
     next();
 })
+
+// Utiliser le cookie-parser
+app.use(cookieParser())
+
+// Parse requests of content-type - application/json
+app.use(cors({origin: 'http://localhost:8080'}, {credentials: true}));
+
+app.use(helmet());
+app.use(limiter);
+app.use (expressSanitizer());
+
+// Parse requests of content-type - application/json
+app.use(bodyParser.json());
+
+// Parse requests of content-type - application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Imports les routes user et post
+
+const userRoutes = require('./routes/user');
+const postRoutes = require('./routes/posts');
+
+// Route authentification pour la gestion des utilisateurs
+app.use('/api/auth', userRoutes);
+
+// Route pour la gestion des posts d'actualités
+app.use('/api/post', postRoutes )
+
+// Route pour stocker les images
+app.use("/images", express.static(path.join(__dirname, "images")));
+
+module.exports = app;
