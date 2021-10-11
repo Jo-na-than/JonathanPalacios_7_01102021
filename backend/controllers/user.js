@@ -635,3 +635,30 @@ exports.updateUser = (req, res) => {
             res.status(500).json({message: "Pb server, user non trouvé"})
         })
 }
+
+// ===> route pour récupérer 1 utilisateur (pour page profil) <===
+exports.getOneUser = (req, res) => {
+
+    db.Users.findOne( {where: { id: req.params.id}})
+        .then((user) => {
+            //user non trouvé => erreur
+            if(! user) {return res.status(404).json({message: "Utilisateur non trouvé"}
+            )}
+            // user trouvé => envoyer la response avec user
+            else {
+                console.log("email " + user.email)
+                let emailDecrypt = decrypt(user.email)
+                
+                let currentUser = {
+                    userNom: user.nom,
+                    userId: user.id,
+                    userPseudo: user.pseudo,
+                    email: emailDecrypt,
+                    avatar: user.avatar,
+                    isAdmin: user.isAdmin
+                }
+                res.status(200).json({currentUser});
+            }
+        })
+        .catch(() => res.status(500).json({message: "problème connexion avec base de donnée"}))
+}
