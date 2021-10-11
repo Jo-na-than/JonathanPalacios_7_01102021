@@ -210,3 +210,9 @@ exports.refreshToken = (req, res) => {
         res.status(201).json(newToken)
     }
 };
+
+// Route pour logout
+exports.logout = (req, res) => {
+    res.clearCookie('refreshtoken')         //supprimer le cookie refreshtoken
+    res.send('supprimer cookie')                     
+};
