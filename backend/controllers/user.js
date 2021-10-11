@@ -41,3 +41,11 @@ function encrypt(text){
     crypted += cipher.final('hex');
     return crypted;
 }
+
+// Fonction pour decrypter
+function decrypt(text){
+    var decipher = crypto.createDecipheriv(algorithm, key, iv)
+    var dec = decipher.update(text,'hex','utf8')
+    dec += decipher.final('utf8');
+    return dec;
+}
