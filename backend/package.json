@@ -4,34 +4,36 @@
     "description": "Node.js Rest Apis with Express, Sequelize & MySQL",
     "main": "server.js",
     "scripts": {
-      "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "echo \"Error: no test specified\" && exit 1"
     },
     "author": "Palacios",
     "license": "ISC",
     "dependencies": {
-      "axios-auth-refresh": "^3.1.0",
-      "bcrypt": "^5.0.1",
-      "body-parser": "^1.19.0",
-      "cookie-parser": "^1.4.5",
-      "cors": "^2.8.5",
-      "crypto": "^1.0.1",
-      "dotenv": "^10.0.0",
-      "express": "^4.17.1",
-      "express-rate-limit": "^5.2.6",
-      "express-sanitizer": "^1.0.5",
-      "express-validator": "^6.10.0",
-      "helmet": "^4.6.0",
-      "jsonwebtoken": "^8.5.1",
-      "mariadb": "^2.5.3",
-      "multer": "^1.4.2",
-      "mysql": "^2.18.1",
-      "mysql2": "^2.2.5",
-      "nodemailer": "^6.5.0",
-      "passport": "^0.4.1",
-      "password-validator": "^5.1.1",
-      "sequelize": "^6.5.1",
-      "sequelize-cli": "^6.2.0",
-      "validator": "^10.11.0",
-      "xss": "^1.0.8"
+        "axios-auth-refresh": "^3.1.0",
+        "bcrypt": "^5.0.1",
+        "body-parser": "^1.19.0",
+        "cookie-parser": "^1.4.5",
+        "cors": "^2.8.5",
+        "crypto": "^1.0.1",
+        "dotenv": "^10.0.0",
+        "express": "^4.17.1",
+        "express-rate-limit": "^5.2.6",
+        "express-sanitizer": "^1.0.5",
+        "express-validator": "^6.10.0",
+        "helmet": "^4.6.0",
+        "jsonwebtoken": "^8.5.1",
+        "mariadb": "^2.5.3",
+        "multer": "^1.4.2",
+        "mysql": "^2.18.1",
+        "mysql2": "^2.2.5",
+        "nodemailer": "^6.5.0",
+        "passport": "^0.4.1",
+        "password-validator": "^5.1.1",
+        "sequelize": "^6.5.1",
+        "validator": "^10.11.0",
+        "xss": "^1.0.8"
+    },
+    "devDependencies": {
+        "sequelize-cli": "^6.2.0"
     }
-  }
+}
