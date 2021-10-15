@@ -130,11 +130,11 @@ export default {
                 .required('Veuillez remplir votre email')
                 .email('Email invalid'),
         password: yup.string()
-                .min(8, 'Mot de passe doit avoir au minimum 8 characters')
-                .max(20, 'Mot de passe doit avoir au maximum 20 characters')
+                .min(8, 'Mot de passe doit avoir au minimum 8 caractères')
+                .max(20, 'Mot de passe doit avoir au maximum 20 caractères')
                 .required('Mot de passe est demandé')
                 .matches(
-                    /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&.])[A-Za-z\d@$!%*#?&.]{8,}$/, " Mot de passe doit avoir 8 et 20 characters, 1 majuscule, 1 minuscule, 1 charactère spécial (@$!%*#?&.)")
+                    /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&.])[A-Za-z\d@$!%*#?&.]{8,}$/, " Mot de passe doit avoir 8 et 20 caractères, 1 majuscule, 1 minuscule, 1 charactère spécial (@$!%*#?&.)")
                 ,
         passwordCheck: yup.string()
                 .oneOf([yup.ref('password'), null], 'Mot de passe doit être le même ')

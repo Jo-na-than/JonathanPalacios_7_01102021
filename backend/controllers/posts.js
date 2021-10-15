@@ -230,7 +230,7 @@ exports.createCommentaire = (req, res) => {
     let regex = /[@&"()_$§*€£`+=\/;#]+$/;
     // Valide le commentaire
     if (validator.matches(req.body.commentaire, regex)) {
-    return res.status(400).json("Veuillez ne pas utiliser les characters spéciaux")
+    return res.status(400).json("Veuillez ne pas utiliser les caractères spéciaux")
     }
     else {
         console.log(req.body.commentaire)

@@ -54,8 +54,8 @@ export default {
         // Define a validation schema pour password
         const schema = yup.object({ 
             newPass: yup.string()
-                .min(8, 'Password doit avoir au minimum 8 characters')
-                .max(20, 'Password doit avoir au maximum 20 characters')
+                .min(8, 'Password doit avoir au minimum 8 caractères')
+                .max(20, 'Password doit avoir au maximum 20 caractères')
                 .required('Password est demandé')
                 .matches(
                     /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&.])[A-Za-z\d@$!%*#?&.]{8,}$/, "Password doit avoir au minimum 1 majuscule, 1 minucule, 1 chiffre, 1 charactère spécial (@$!%*#?&.)")
