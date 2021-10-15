@@ -783,7 +783,7 @@ exports.resetPassword = async (req, res) => {
                         }
                     else {
                         // valider password avec password-validator
-                        if(!schema.validate(req.body.password)) {return res.status(400).json({message: " Password doit avoir 8 et 20 characters, 1 majuscule, 1 minuscule, 1 symbol"})}
+                        if(!schema.validate(req.body.password)) {return res.status(400).json({message: " Password doit avoir 8 et 20 caractères, 1 majuscule, 1 minuscule, 1 symbol"})}
                         // 3) Si user est présent, Update nouveau password
                         bcrypt.hash(req.body.password, 10)
                             .then( hash => {
