@@ -18,14 +18,17 @@ const expressSanitizer = require('express-sanitizer');
 // Chargement du fichier .env pour garder secret les infos confidentiels
 require('dotenv').config(); 
 
-// SetHeader
-app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:8080');
-    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Credentials', true)
-    next();
-})
+app.use(
+  cors({
+    origin(_, callback) {
+      callback(null, true);
+    },
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+    exposedHeaders: ['X-Filename'],
+  }),
+);
+
 
 // Utiliser le cookie-parser
 app.use(cookieParser())

@@ -5,10 +5,10 @@ const jwt = require('jsonwebtoken');
 const fs = require('fs');
 
 // Model Sequelize
-const db = require('../models')
+const db = require('../db/models')
 const Sequelize = require('sequelize');
-const association = require('../models/association').association
-const sequelize = require('../models/index').sequelize;
+const association = require('../db/models/association').association
+const sequelize = require('../db/models/index').sequelize;
 const models = association(sequelize);
 
 // Middleware pour envoi mail si reset/update password
@@ -121,7 +121,11 @@ exports.signup = ((req, res) => {
                 })  
             }
         })
-        .catch( () => res.status(500).json( { message: "Pb de server, impossible chercher email user"}))       
+        .catch((e) => {
+            console.log(e)
+                return res.status(500).json({message: "Pb de server, impossible de chercher user"})
+        })
+               
     }
 })
 

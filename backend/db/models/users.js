@@ -1,7 +1,7 @@
 // modele table Users
 'use strict';
 
-const db = require('../server'); // fichier où se trouve l'instance sequelize
+const db = require('../../server'); // fichier où se trouve l'instance sequelize
 const crypto = require('crypto')
 // function pour crypter et decrypter email
 // key et iv pour crypto
