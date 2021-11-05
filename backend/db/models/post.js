@@ -1,71 +1,53 @@
-// modèle de table Posts
 'use strict';
-
-const Sequelize = require('sequelize');
-
+const {
+  Model
+} = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  const posts = sequelize.define(
-    "Posts", {
-      id: {
-        autoIncrement: true,
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        primaryKey: true,
-      },
-      title: {
-        allowNull: true,
-        type: DataTypes.STRING(50)
-      },
-      content: {
-        allowNull: true,
-        type: DataTypes.TEXT
-      },
-      userId: {
-          type: DataTypes.INTEGER,
-          allowNull: false,
-          references: {
-            model: "users",
-            key: "id",
-          },
-      },
-      img_url: {
-        allowNull: true,
-        type: DataTypes.STRING(255)
-      },
-      createdAt: {
-        allowNull: false,
-        type: DataTypes.DATE
-      },
-      updatedAt: {
-        allowNull: false,
-        type: DataTypes.DATE
-      },
-    }, 
-    {
-      sequelize,
-      tableName: "posts",
-      timeStamps: true,
-      indexes: [
-          {
-            name: "PRIMARY",
-            unique: true,
-            using: "BTREE",
-            fields: [{ name: "id" }],
-          },
-          {
-            name: "id",
-            unique: true,
-            using: "BTREE",
-            fields: [{ name: "id" }],
-          },
-          {
-            name: "userId",
-            using: "BTREE",
-            fields: [{ name: "userId" }],
-          },
-        ],
+  class post extends Model {
+    /**
+     * Helper method for defining associations.
+     * This method is not a part of Sequelize lifecycle.
+     * The `models/index` file will call this method automatically.
+     */
+    static associate(models) {
+      // define association here
+      models.post.belongsTo(models.users, {
+        foreignKey: {
+          allowNull: false
+        },
+        onDelete: 'CASCADE'
+      })
+      models.post.hasMany(models.commentaires, {
+        foreignKey: {
+          name: 'postId'
+        }
+      })
+      models.post.hasMany(models.likes, {
+        foreignKey: {
+          name: 'postId'
+        }
+      })
     }
-  );
-  return posts
-  
+  };
+  post.init({
+    id: {
+      primaryKey: true,
+      type: DataTypes.INTEGER
+    },
+    content: DataTypes.STRING,
+    img_url: DataTypes.STRING,
+    userId: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'users',
+        key: 'id'
+      }
+    },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE
+  }, {
+    sequelize,
+    modelName: 'post',
+  });
+  return post;
 };

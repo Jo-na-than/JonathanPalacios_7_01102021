@@ -1,63 +1,57 @@
-// modèle de table likes
-const Sequelize = require("sequelize");
-module.exports = function (sequelize, DataTypes) {
-  const likes = sequelize.define(
-    "likes",
-    {
-      id: {
-        autoIncrement: true,
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        primaryKey: true,
-      },
-      userId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-          model: "users",
-          key: "id",
+'use strict';
+const {
+  Model
+} = require('sequelize');
+module.exports = (sequelize, DataTypes) => {
+  class likes extends Model {
+    /**
+     * Helper method for defining associations.
+     * This method is not a part of Sequelize lifecycle.
+     * The `models/index` file will call this method automatically.
+     */
+    static associate(models) {
+      // define association here
+       // define association here
+       models.commentaires.belongsTo(models.users, {
+        foreignKey: {
+          allowNull: false
         },
-      },
-      postId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-          model: "posts",
-          key: "id",
+        onDelete: 'CASCADE'
+      });
+      models.commentaires.belongsTo(models.post, {
+        foreignKey: {
+          allowNull: false
         },
-      },
-      createdAt: {
-        allowNull: false,
-        type: DataTypes.DATE
-      },
-      updatedAt: {
-        allowNull: false,
-        type: DataTypes.DATE
-      },
-    },
-    {
-      sequelize,
-      tableName: "likes",
-      timestamps: true,
-      indexes: [
-        {
-          name: "PRIMARY",
-          unique: true,
-          using: "BTREE",
-          fields: [{ name: "id" }],
-        },
-        {
-          name: "userId",
-          using: "BTREE",
-          fields: [{ name: "userId" }],
-        },
-        {
-          name: "postId",
-          using: "BTREE",
-          fields: [{ name: "postId" }],
-        },
-      ],
+        onDelete: 'CASCADE'
+      })
     }
-  );
+  };
+  likes.init({
+    id: {
+      allowNull: false,
+      autoIncrement: true,
+      primaryKey: true,
+      type: DataTypes.INTEGER
+    },
+    postId: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'post',
+        key: 'id',
+      },
+      onDelete: 'CASCADE',
+    },
+    userId: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'users',
+        key: 'id',
+      },
+      onDelete: 'CASCADE',
+    }
+  }, {
+    sequelize,
+    modelName: 'likes',
+  });
   return likes;
 };

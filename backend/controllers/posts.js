@@ -2,11 +2,7 @@ const fs = require('fs');
 const xss = require('xss')
 const validator = require('validator')
 
-const db = require('../db/models')
-const Sequelize = require('sequelize');
-const association = require('../db/models/association').association
-const sequelize = require('../db/models/index').sequelize;
-const models = association(sequelize);
+const db = require('../db/models');
 
 // ===> Route pour créer 1 post <===
 exports.createPost = (req, res) => {
@@ -19,7 +15,7 @@ exports.createPost = (req, res) => {
         else { file_url = ""};
 
             // Enregistrer dans table Posts
-        const post = db.Posts.create({
+        const post = db.post.create({
             content: xss(req.body.content),
             img_url: file_url,
             userId: req.body.userId
@@ -35,16 +31,16 @@ exports.createPost = (req, res) => {
 // ===> Route pour récupérer tous les publications <===
 exports.getAllPosts = (req, res) => {
     // Chercher les posts avec likes et commentaires et user
-    models.posts.findAll({
+    db.post.findAll({
         include: [ 
-            {model: models.likes},
-            {model: models.commentaires},
-            {model: models.users,
+            {model: db.likes},
+            {model: db.commentaires},
+            {model: db.users,
                     attributes: ['avatar', 'pseudo']}
          ],
         order: [
             ["id", "DESC"],
-            [models.commentaires, "id", 'DESC']
+            [db.commentaires, "id", 'DESC']
         ],
       })
       // Envoyer tous les posts au client side
@@ -58,7 +54,7 @@ exports.getAllPosts = (req, res) => {
 exports.updatePost = (req, res) => {
     let newFile_url=""
     // Chercher le post avec son id
-    db.Posts.findOne ( { where:  { id: req.params.postId}} )
+    db.post.findOne ( { where:  { id: req.params.postId}} )
         .then( (post) => {
 
             // Verifier si c'est bien le user avant de faire update
@@ -69,7 +65,7 @@ exports.updatePost = (req, res) => {
                 // Update sans file
                 if (!req.file) {
                     
-                        db.Posts.update({
+                        db.post.update({
                             ...post,
                             content: xss(req.body.content),},
                         {where: {id: req.params.postId}})
@@ -95,7 +91,7 @@ exports.updatePost = (req, res) => {
                             
                             newFile_url = (req.file.filename);
                             
-                                db.Posts.update({
+                                db.post.update({
                                     img_url: newFile_url,
                                     content: xss(req.body.content),
                                     },
@@ -122,17 +118,17 @@ exports.updatePost = (req, res) => {
 // ===> Route pour récupérer post d'un user <===
 exports.getUserPosts = (req, res) => {
     // Chercher tous les posts, likes, commentaires du user avec son id
-    models.posts
+    db.post
       .findAll({
         where: {userId: req.params.id},
         include: [
-            {model: models.likes},
-            {model: models.commentaires},
-            {model: models.users,
+            {model: db.likes},
+            {model: db.commentaires},
+            {model: db.users,
                     attributes: ['avatar', 'pseudo']}
         ],
         order: [
-            ["id", "DESC"], [models.commentaires, "id", 'DESC']
+            ["id", "DESC"], [db.commentaires, "id", 'DESC']
         ],
       })
       // Envoyer tous au client side
@@ -145,7 +141,7 @@ exports.getUserPosts = (req, res) => {
 // ===> Route pour supprimer post <===
 exports.deletePost = (req, res) => {
     // Chercher post avec son id
-    db.Posts
+    db.post
       .findOne({ where: { id: req.params.postId } })
       .then((post) => {     
           // Chercher les images, video et effacer
@@ -164,7 +160,7 @@ exports.deletePost = (req, res) => {
         })
         // Supprimer dans table posts
     .then(() => {
-            db.Posts
+            db.post
             .destroy({ where: { id: req.params.postId } })
             .then(() =>
                 res.status(200).json({ message: "Publications supprimée !" })
@@ -216,7 +212,7 @@ exports.createLike = (req, res) => {
 
 // ===> Récupérer les likes <===
 exports.getLike = (req, res) => {
-    models.likes
+    db.likes
       .findAll({ where: { postId: req.params.postId } })
       .then((like) => {
         res.status(200).json(like);

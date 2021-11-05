@@ -1,89 +1,58 @@
-// la table commentaires
-const Sequelize = require("sequelize");
-module.exports = function (sequelize, DataTypes) {
-  const commentaires = sequelize.define(
-    "commentaires",
-    {
-      id: {
-        autoIncrement: true,
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        primaryKey: true,
-      },
-      commentaires: {
-        type: DataTypes.TEXT,
-        allowNull: false,
-      },
-      userId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-          model: "users",
-          key: "id",
+'use strict';
+const {
+  Model
+} = require('sequelize');
+module.exports = (sequelize, DataTypes) => {
+  class commentaires extends Model {
+    /**
+     * Helper method for defining associations.
+     * This method is not a part of Sequelize lifecycle.
+     * The `models/index` file will call this method automatically.
+     */
+    static associate(models) {
+      // define association here
+      models.commentaires.belongsTo(models.users, {
+        foreignKey: {
+          allowNull: false
         },
-      },
-      userAvatar: {
-        type: DataTypes.STRING(255),
-        allowNull: false,
-        references: {
-          model: "users",
-          key: "id",
+        onDelete: 'CASCADE'
+      });
+      models.commentaires.belongsTo(models.post, {
+        foreignKey: {
+          allowNull: false
         },
-      },
-      userPseudo: {
-        type: DataTypes.STRING(255),
-        allowNull: false,
-        references: {
-          model: "users",
-          key: "id",
-        },
-      },
-      postId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-          model: "posts",
-          key: "id",
-        },
-      },
-      createdAt: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
-      updatedAt: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
-    },
-    {
-      sequelize,
-      tableName: "commentaires",
-      timestamps: true,
-      indexes: [
-        {
-          name: "PRIMARY",
-          unique: true,
-          using: "BTREE",
-          fields: [{ name: "id" }],
-        },
-        {
-          name: "id",
-          unique: true,
-          using: "BTREE",
-          fields: [{ name: "id" }],
-        },
-        {
-          name: "userId",
-          using: "BTREE",
-          fields: [{ name: "userId" }],
-        },
-        {
-          name: "postId",
-          using: "BTREE",
-          fields: [{ name: "postId" }],
-        },
-      ],
+        onDelete: 'CASCADE'
+      })
     }
-  );
+  };
+  commentaires.init({
+    id: {
+      allowNull: false,
+      autoIncrement: true,
+      primaryKey: true,
+      type: DataTypes.INTEGER
+    },
+    userAvatar: DataTypes.STRING,
+    userPseudo: DataTypes.STRING,
+    postId: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'post',
+        key: 'id',
+      },
+      onDelete: 'CASCADE',
+    },
+    userId: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'users',
+        key: 'id',
+      },
+      onDelete: 'CASCADE',
+    },
+  }, {
+    sequelize,
+    modelName: 'commentaires',
+  });
   return commentaires;
 };

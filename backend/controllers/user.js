@@ -5,11 +5,7 @@ const jwt = require('jsonwebtoken');
 const fs = require('fs');
 
 // Model Sequelize
-const db = require('../db/models')
-const Sequelize = require('sequelize');
-const association = require('../db/models/association').association
-const sequelize = require('../db/models/index').sequelize;
-const models = association(sequelize);
+const db = require('../db/models');
 
 // Middleware pour envoi mail si reset/update password
 const sendEmail = require('./email');
@@ -70,14 +66,14 @@ exports.signup = ((req, res) => {
 
     if (userData.fonction.length > 0 &&  (!validator.matches(userData.fonction, /^[a-zéèàùûêâôë][a-zéèàùûêâôë '-]+$/i)) ) {return res.status(400).json({message: " veuillez ne saisir que des lettres"}) }   
     
-        // Valider password avec password-validator
+    // Valider password avec password-validator
     if(!schema.validate(userData.password)) {return res.status(400).json({message: " Mot de passe doit avoir 8 et 20 caractères, 1 majuscule, 1 minuscule, 1 caractère spécial"})}
     
     // Vérifier si password et passwordCheck soit le même
     if ( userData.password !== userData.passwordCheck) { return res.status(400).json({message: "Mot de passe doit être le même pour les 2 champs"})}
 
         // Après validation des données, chercher si email est déjà utilisé ; si non crée user
-    else { db.Users.findOne ( {  where: { email: emailHash }})
+    else { db.users.findOne ( {  where: { email: emailHash }})
         .then( user => { 
                 // Si trouvé user dans BDD avec email => email déjà utilisé
             if( user) {
@@ -85,7 +81,7 @@ exports.signup = ((req, res) => {
             }
             else {  // Email n'est pas dans BDD
                 // Vérifier si pseudo est déjà présente dans BDD 
-                db.Users.findOne ( { where: { pseudo : userData.pseudo}})
+                db.users.findOne ( { where: { pseudo : userData.pseudo}})
                 .then( user => { 
                     if (user) {     // Pseudo trouvé dans BDD
                        return res.status(400).json({ message: " pseudo deja utilisé"});
@@ -102,7 +98,7 @@ exports.signup = ((req, res) => {
                                 else { avatarName = "avatar_default.png"} 
 
                                     // Créer user
-                                const newUser = db.Users.create({
+                                const newUser = db.users.create({
                                     email: emailHash,
                                     nom: userData.nom,
                                     prenom: userData.prenom,
@@ -133,7 +129,9 @@ exports.signup = ((req, res) => {
 exports.login = (req, res) => {
     // Crypter email entrée afin de comparer avec celui dans BDD
     let emailLogin = encrypt(req.body.email)
-    db.Users.findOne( {
+    console.log('emailLogin', emailLogin)
+    db.users.findAll().then((allUsers) => console.log(allUsers))
+    db.users.findOne( {
         // Chercher user avec son email
         where: {email: emailLogin}})// trouver utilisateur avec email unique
         .then( (user) => {
@@ -157,7 +155,7 @@ exports.login = (req, res) => {
                         let token = jwt.sign(            // un token pour la connexion
                             {userId: user.id },
                             process.env.SECRET_TOKEN, 
-                            {expiresIn: "1m",})
+                            {expiresIn: "10h",})
 
                         /* On créer le cookie contenant le refresh token */
                         res.cookie('refreshtoken', refreshToken,
@@ -224,7 +222,7 @@ exports.logout = (req, res) => {
 // Route pour que l'user supprime son compte
 exports.deleteUser = (req, res) => {
     // chercher user dans BDD
-    db.Users.findOne({where: {id: req.params.id}})
+    db.users.findOne({where: {id: req.params.id}})
         .then( user => {
             console.log("user" + user);      // OK
             console.log(req.body.password);
@@ -283,7 +281,7 @@ exports.deleteUser = (req, res) => {
                 })
             
             // Chercher les publications de ce user
-            db.Posts.findAll({ where: { userId: req.params.id } })
+            db.post.findAll({ where: { userId: req.params.id } })
                 .then((posts) => {
                     // Si user n'a pas de publication
                     if (!posts) {
@@ -298,7 +296,7 @@ exports.deleteUser = (req, res) => {
                             }
                         }
                             // Supprimer les publications
-                        db.Posts.destroy({ where: { userId: req.params.id } })
+                        db.post.destroy({ where: { userId: req.params.id } })
                             .then(() => console.log("Supprimer les publications d'utilisateur")
                             )
                             .catch( err => console.log(err))
@@ -307,7 +305,7 @@ exports.deleteUser = (req, res) => {
 
         // Supprimer ce user
         .then( () => {
-            db.Users.destroy ({where: {id:req.params.id}})
+            db.users.destroy ({where: {id:req.params.id}})
             .then( () => res.status(200).json("utilisateur supprimé"))
             .catch( err=> console.log(err))
         })
@@ -321,7 +319,7 @@ exports.deleteUser = (req, res) => {
 // ===> Route pour supprimer 1 user par Admin <===
 exports.adminDelete = (req, res) => {
     // Chercher user avec son id
-    db.Users.findOne ( { where: { id: req.params.id}})
+    db.users.findOne ( { where: { id: req.params.id}})
         .then( user => {
             // si user a son photo avatar, supprimer la photo avant supprimer le compte
             const filename = user.avatar
@@ -360,7 +358,7 @@ exports.adminDelete = (req, res) => {
                 })
             
             // Chercher les publications de ce user
-            db.Posts.findAll({ where: { userId: req.params.id } })
+            db.post.findAll({ where: { userId: req.params.id } })
                 .then((posts) => {
                     // Si user n'a pas de publication
                     if (!posts) {
@@ -375,7 +373,7 @@ exports.adminDelete = (req, res) => {
                             }
                         }
                         
-                        db.Posts.destroy({ where: { userId: req.params.id } })
+                        db.post.destroy({ where: { userId: req.params.id } })
                             .then( () => console.log("Supprimer les publications d'utilisateur"))
                             .catch( err => console.log(err))
                     }     
@@ -383,7 +381,7 @@ exports.adminDelete = (req, res) => {
         
         // Supprimer ce user
         .then( () => {
-            db.Users.destroy ({where: {id:req.params.id}})
+            db.users.destroy ({where: {id:req.params.id}})
             .then( () => res.status(200).json("utilisateur supprimé par admin"))
             .catch( err => console.log(err))
         })
@@ -393,7 +391,7 @@ exports.adminDelete = (req, res) => {
 // ===> route pour donner le role admin pour 1 user <===
 exports.adminChange = (req, res) => {
     // vérifier si c'est bien un admin qui effectuer ce changement
-    db.Users.findOne ({where : { id: req.params.id} })
+    db.users.findOne ({where : { id: req.params.id} })
         .then( user => {
             // si ce n'est pas un admin, envoyer error
             if (user.isAdmin == false) {
@@ -401,11 +399,11 @@ exports.adminChange = (req, res) => {
             }
             // si c'est bien admin, en chercher utilisateur pour attribuer son rôle
             else {
-                db.Users.findOne ( {where : { id: req.params.userId} } )
+                db.users.findOne ( {where : { id: req.params.userId} } )
                     .then( user => {
                         console.log(user.isAdmin);      // OK
                         // update le rôle admin pour ce user
-                        db.Users.update( {
+                        db.users.update( {
                             ...user,
                             isAdmin: true,
                             id: req.params.userId
@@ -437,7 +435,7 @@ exports.updatePassword = (req, res) => {
     console.log( {oldPass});
 
     // 1) Get user from database by Id
-    db.Users.findOne ( { where: { id: req.params.id}})
+    db.users.findOne ( { where: { id: req.params.id}})
         .then( user => {
     // 2) Check if the POSTED password is correct
             bcrypt.compare(oldPass, user.password)
@@ -450,7 +448,7 @@ exports.updatePassword = (req, res) => {
                     else {
                         bcrypt.hash(newPass, 10)
                         .then( hash => {
-                            db.Users.update( {
+                            db.users.update( {
                                 ...req.body,
                                 password: hash,
                                 id: req.params.id
@@ -493,7 +491,7 @@ exports.updateUser = (req, res) => {
     let newFonction = "";
 
     // Chercher user avec son ID
-    db.Users.findOne ({ where: {id: req.params.id}} )
+    db.users.findOne ({ where: {id: req.params.id}} )
         .then( user => {
             // si update avec photo avatar
             if (req.file) {
@@ -514,7 +512,7 @@ exports.updateUser = (req, res) => {
                 }
                 // Puis update avatar dans BDD
                 
-                db.Users.update( {
+                db.users.update( {
                     ...user,
                     avatar: req.file.filename},
                     {where: {id:req.params.id}})
@@ -555,14 +553,14 @@ exports.updateUser = (req, res) => {
                 else {
                     let emailLogin = encrypt(req.body.email)
                     console.log("emailLogin " + emailLogin)
-                    db.Users.findOne({where: {email: emailLogin}})
+                    db.users.findOne({where: {email: emailLogin}})
                         .then( user => {
                             // si email est déjà utilisé, envoyer 400
                             if (user) {return res.status(400).json({message: "Email déjà utilisé"})}
 
                             // si email n'est pas encore dans BDD, update user avec nouvel email
                             
-                            db.Users.update({...user, email: emailLogin}, {where: {id:req.params.id}})
+                            db.users.update({...user, email: emailLogin}, {where: {id:req.params.id}})
                                 .then( () => { console.log("Update email réussi")})
                                 .catch(err => {
                                     console.log(err);
@@ -577,7 +575,7 @@ exports.updateUser = (req, res) => {
             //si update avec pseudo: vérifier si pseudo est déjà présenté dans BDD?
             if (req.body.pseudo.length >0 && req.body.pseudo !="undefined") {
                
-                db.Users.findOne({where: {pseudo:req.body.pseudo}})
+                db.users.findOne({where: {pseudo:req.body.pseudo}})
                     .then( user => {
                         // si pseudo est déjà utilisé, envoyer 400
                         if (user) {return res.status(400).json({message: "Pseudo déjà utilisé"})}
@@ -588,7 +586,7 @@ exports.updateUser = (req, res) => {
                         
                             // update user avec pseudo dans la table Users
                             newPseudo = req.body.pseudo;
-                            db.Users.update( {...user, pseudo: newPseudo}, {where: {id:req.params.id}})
+                            db.users.update( {...user, pseudo: newPseudo}, {where: {id:req.params.id}})
                                 .then( () => {console.log("Update pseudo réussi")})
                                 .catch(err => {
                                     console.log(err);
@@ -620,7 +618,7 @@ exports.updateUser = (req, res) => {
                 newFonction = req.body.fonction;
                 console.log({newFonction});
                 // update user fonction
-                db.Users.update({...user,fonction: newFonction},{ where: {id: req.params.id}} )
+                db.users.update({...user,fonction: newFonction},{ where: {id: req.params.id}} )
                     .then( () => {
                         console.log("Update fonction réussi");
                     } )
@@ -643,7 +641,7 @@ exports.updateUser = (req, res) => {
 // ===> route pour récupérer 1 utilisateur (pour page profil) <===
 exports.getOneUser = (req, res) => {
 
-    db.Users.findOne( {where: { id: req.params.id}})
+    db.users.findOne( {where: { id: req.params.id}})
         .then((user) => {
             //user non trouvé => erreur
             if(! user) {return res.status(404).json({message: "Utilisateur non trouvé"}
@@ -671,13 +669,13 @@ exports.getOneUser = (req, res) => {
 // ===> route pour récupérer tous les utilisateurs (pour admin par exemple) <===
 exports.getAllUser = (req, res) => {
     // vérifier si user connecté est admin ou pas?
-    db.Users.findOne ( { where: { id: req.params.id }})
+    db.users.findOne ( { where: { id: req.params.id }})
         .then( user => {
             // s'il n'est pas admin; interdit les actions
             if(user.isAdmin === false) {return res.status(400).json("Vous n'êtes pas admin")}
             else {
             // si user est admin, chercher tous les user, trier par id 
-                db.Users.findAll( {
+                db.users.findAll( {
                     attributes: ["id","nom", "prenom", "pseudo", "createdAt", "isAdmin"]
                 },
                 {order: ["id"] })
@@ -701,7 +699,7 @@ exports.forgotPassword = async (req, res) => {
     let emailLogin = encrypt(req.body.email)
 
     // comparer ce email avec celui dans BDD user based on email
-    const user = await db.Users.findOne ( { where: {email: emailLogin } })
+    const user = await db.users.findOne ( { where: {email: emailLogin } })
     try {
         // user pas trouvé
         if ( ! user ) {return res.status(404).json({ message: " Utilisateur non trouvé avec email "})}
@@ -720,7 +718,7 @@ exports.forgotPassword = async (req, res) => {
                 console.log({resetToken}, { resetTokenHash});      //OK
             
                 // update BDD avec ce resetTokenHash
-            db.Users.update (
+            db.users.update (
                 {...userObject,
                     email: emailLogin,
                     createPasswordResetToken: resetTokenHash
@@ -749,7 +747,7 @@ exports.forgotPassword = async (req, res) => {
                     console.log(err)
                     res.status(500).json({ message: "Problème pour envoyer email"})
                 // en cas de pb d'envoie, réinitialiser le colonne resetPassword à undefined
-                    db.Users.update (
+                    db.users.update (
                         {...userObject,
                             email: emailLogin,
                             createPasswordResetToken: 'undefined'
@@ -778,7 +776,7 @@ exports.resetPassword = async (req, res) => {
                 // 2) Si token est encore valide, comparer avec celui dans BDD
                 const hashToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
                 // chercher user avec la colonne qui a ce token
-                const user= db.Users.findOne( { where: {
+                const user= db.users.findOne( { where: {
                     createPasswordResetToken: hashToken,
                     }
                 })
@@ -791,7 +789,7 @@ exports.resetPassword = async (req, res) => {
                         // 3) Si user est présent, Update nouveau password
                         bcrypt.hash(req.body.password, 10)
                             .then( hash => {
-                                db.Users.update( {
+                                db.users.update( {
                                     ...user,
                                     password: hash,
                                     createPasswordResetToken: "undefined",
