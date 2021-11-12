@@ -30,19 +30,19 @@ app.use(
 );
 
 // setHeader
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  next();
-})
+// app.use((req, res, next) => {
+  // res.setHeader('Access-Control-Allow-Origin', '*');
+  // res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
+  // res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  // next();
+// }) 
 
 
 // Utiliser le cookie-parser
 app.use(cookieParser())
 
 // Parse requests of content-type - application/json
-app.use(cors({origin: 'http://localhost:8080'}, {credentials: true}));
+// app.use(cors({origin: 'http://localhost:8080'}, {credentials: true}));
 
 app.use(helmet());
 app.use(limiter);
