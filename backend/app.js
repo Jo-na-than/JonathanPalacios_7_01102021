@@ -15,22 +15,28 @@ const limiter = rateLimit({
 });
 const expressSanitizer = require('express-sanitizer');
 
-// setHeader
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE,PATCH, OPTIONS');
-  next();
-})
-
 // Chargement du fichier .env pour garder secret les infos confidentiels
 require('dotenv').config(); 
 
 app.use(
   cors({
-    origin: '*',
+    origin(_, callback) {
+      callback(null, true);
+    },
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+    exposedHeaders: ['X-Filename'],
   }),
 );
+
+// setHeader
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  next();
+})
+
 
 // Utiliser le cookie-parser
 app.use(cookieParser())
