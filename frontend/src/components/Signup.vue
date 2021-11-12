@@ -74,7 +74,7 @@
                     <!-- input select condition d'utilisation -->
                      <div class="form-group form-check">
                         <input type="checkbox" v-model="accept" id="accept" required class="form-check-input">
-                        <label class="form-check-label" for="accept">Accept conditions d'utilisation </label>
+                        <label class="form-check-label" for="accept">Acceptez les conditions d'utilisation </label>
                     </div>
 
                     <button type="submit" class="btn btn-primary button-blue text-center mb-5" id="button" >Valider</button>
