@@ -11,13 +11,16 @@ module.exports = {
       userAvatar: {
         type: Sequelize.STRING
       },
+      commentaire: {
+        type: Sequelize.STRING
+      },
       userPseudo: {
         type: Sequelize.STRING
       },
       postId: {
         type: Sequelize.INTEGER,
         references: {
-          model: 'post',
+          model: 'posts',
           key: 'id',
         },
         onDelete: 'CASCADE',

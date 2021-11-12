@@ -21,6 +21,10 @@ module.exports = {
       nom: {
         type: Sequelize.STRING
       },
+      avatar: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
       email: {
         allowNull: false,
         unique: true,

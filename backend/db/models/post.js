@@ -11,18 +11,18 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      models.post.belongsTo(models.users, {
+      models.posts.belongsTo(models.users, {
         foreignKey: {
           allowNull: false
         },
         onDelete: 'CASCADE'
       })
-      models.post.hasMany(models.commentaires, {
+      models.posts.hasMany(models.commentaires, {
         foreignKey: {
           name: 'postId'
         }
       })
-      models.post.hasMany(models.likes, {
+      models.posts.hasMany(models.likes, {
         foreignKey: {
           name: 'postId'
         }
@@ -47,7 +47,7 @@ module.exports = (sequelize, DataTypes) => {
     updatedAt: DataTypes.DATE
   }, {
     sequelize,
-    modelName: 'post',
+    modelName: 'posts',
   });
   return post;
 };

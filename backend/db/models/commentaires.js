@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
         },
         onDelete: 'CASCADE'
       });
-      models.commentaires.belongsTo(models.post, {
+      models.commentaires.belongsTo(models.posts, {
         foreignKey: {
           allowNull: false
         },
@@ -33,11 +33,12 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER
     },
     userAvatar: DataTypes.STRING,
+    commentaire: DataTypes.STRING,
     userPseudo: DataTypes.STRING,
     postId: {
       type: DataTypes.INTEGER,
       references: {
-        model: 'post',
+        model: 'posts',
         key: 'id',
       },
       onDelete: 'CASCADE',

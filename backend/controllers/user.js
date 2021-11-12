@@ -281,7 +281,7 @@ exports.deleteUser = (req, res) => {
                 })
             
             // Chercher les publications de ce user
-            db.post.findAll({ where: { userId: req.params.id } })
+            db.posts.findAll({ where: { userId: req.params.id } })
                 .then((posts) => {
                     // Si user n'a pas de publication
                     if (!posts) {
@@ -296,7 +296,7 @@ exports.deleteUser = (req, res) => {
                             }
                         }
                             // Supprimer les publications
-                        db.post.destroy({ where: { userId: req.params.id } })
+                        db.posts.destroy({ where: { userId: req.params.id } })
                             .then(() => console.log("Supprimer les publications d'utilisateur")
                             )
                             .catch( err => console.log(err))
@@ -358,7 +358,7 @@ exports.adminDelete = (req, res) => {
                 })
             
             // Chercher les publications de ce user
-            db.post.findAll({ where: { userId: req.params.id } })
+            db.posts.findAll({ where: { userId: req.params.id } })
                 .then((posts) => {
                     // Si user n'a pas de publication
                     if (!posts) {
@@ -373,7 +373,7 @@ exports.adminDelete = (req, res) => {
                             }
                         }
                         
-                        db.post.destroy({ where: { userId: req.params.id } })
+                        db.posts.destroy({ where: { userId: req.params.id } })
                             .then( () => console.log("Supprimer les publications d'utilisateur"))
                             .catch( err => console.log(err))
                     }     

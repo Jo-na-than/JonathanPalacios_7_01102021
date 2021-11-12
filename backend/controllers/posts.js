@@ -15,7 +15,7 @@ exports.createPost = (req, res) => {
         else { file_url = ""};
 
             // Enregistrer dans table Posts
-        const post = db.post.create({
+        const post = db.posts.create({
             content: xss(req.body.content),
             img_url: file_url,
             userId: req.body.userId
@@ -31,7 +31,7 @@ exports.createPost = (req, res) => {
 // ===> Route pour récupérer tous les publications <===
 exports.getAllPosts = (req, res) => {
     // Chercher les posts avec likes et commentaires et user
-    db.post.findAll({
+    db.posts.findAll({
         include: [ 
             {model: db.likes},
             {model: db.commentaires},
@@ -44,7 +44,7 @@ exports.getAllPosts = (req, res) => {
         ],
       })
       // Envoyer tous les posts au client side
-      .then((posts) => {
+      .then(async (posts) => {
         res.status(200).json(posts);
       })
       .catch((error) => res.status(500).json(error));
@@ -54,7 +54,7 @@ exports.getAllPosts = (req, res) => {
 exports.updatePost = (req, res) => {
     let newFile_url=""
     // Chercher le post avec son id
-    db.post.findOne ( { where:  { id: req.params.postId}} )
+    db.posts.findOne ( { where:  { id: req.params.postId}} )
         .then( (post) => {
 
             // Verifier si c'est bien le user avant de faire update
@@ -65,7 +65,7 @@ exports.updatePost = (req, res) => {
                 // Update sans file
                 if (!req.file) {
                     
-                        db.post.update({
+                        db.posts.update({
                             ...post,
                             content: xss(req.body.content),},
                         {where: {id: req.params.postId}})
@@ -91,7 +91,7 @@ exports.updatePost = (req, res) => {
                             
                             newFile_url = (req.file.filename);
                             
-                                db.post.update({
+                                db.posts.update({
                                     img_url: newFile_url,
                                     content: xss(req.body.content),
                                     },
@@ -118,7 +118,7 @@ exports.updatePost = (req, res) => {
 // ===> Route pour récupérer post d'un user <===
 exports.getUserPosts = (req, res) => {
     // Chercher tous les posts, likes, commentaires du user avec son id
-    db.post
+    db.posts
       .findAll({
         where: {userId: req.params.id},
         include: [
@@ -141,7 +141,7 @@ exports.getUserPosts = (req, res) => {
 // ===> Route pour supprimer post <===
 exports.deletePost = (req, res) => {
     // Chercher post avec son id
-    db.post
+    db.posts
       .findOne({ where: { id: req.params.postId } })
       .then((post) => {     
           // Chercher les images, video et effacer
@@ -160,7 +160,7 @@ exports.deletePost = (req, res) => {
         })
         // Supprimer dans table posts
     .then(() => {
-            db.post
+            db.posts
             .destroy({ where: { id: req.params.postId } })
             .then(() =>
                 res.status(200).json({ message: "Publications supprimée !" })
@@ -229,10 +229,9 @@ exports.createCommentaire = (req, res) => {
     return res.status(400).json("Veuillez ne pas utiliser les caractères spéciaux")
     }
     else {
-        console.log(req.body.commentaire)
         // Créer le commentaire
         db.commentaires.create({
-            commentaires: xss(req.body.commentaire),
+            commentaire: xss(req.body.commentaire),
             postId: req.body.postId,
             userId: req.body.userId,
             userAvatar: req.body.userAvatar,
