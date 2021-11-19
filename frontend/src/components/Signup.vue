@@ -235,7 +235,7 @@ export default {
 
                 // envoyer formulaire au server
                 await axios.post('api/auth/signup', form) 
-                    .then((response) => {                   // récupérer la response du server
+                    .then((response) => {                   // récupérer la reponse du server
                         Swal.fire( " Signup réussi, veuillez login avec votre email et password")
                         console.log(response)
                         this.error=""

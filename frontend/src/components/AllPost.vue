@@ -17,8 +17,8 @@
 
                         <!-- image avatar et pseudo -->
                         <div class="hidden">
-                            <img class="b-avatar rounded-circle" :src="`http://localhost:5000/images/${post.User.avatar}`" :alt=" `avatar de ${post.User.pseudo}`" />
-                            <p class="font_superlight py-1">{{post.User.pseudo}}</p>
+                            <img class="b-avatar rounded-circle" :src="`http://localhost:5000/images/${post.user.avatar}`" :alt=" `avatar de ${post.user.pseudo}`" />
+                            <p class="font_superlight py-1">{{post.user.pseudo}}</p>
                             <p class="font_light"> publié {{post.updatedAt}}</p>   
                         </div>
 
@@ -99,13 +99,13 @@
                     <!-- afficher image   -->
                     <div v-if="post.img_url !='' && (post.img_url.includes('.jpg') || post.img_url.includes('.jpeg') || post.img_url.includes('.png') || post.img_url.includes('.gif') ) "  class="mx-auto text-center">
 
-                            <img class="img img-fluid mx-auto" :src="getImage(index)" :alt="`photo illustration ${post.User.pseudo}`" />
+                            <img class="img img-fluid mx-auto" :src="getImage(index)" :alt="`photo illustration ${post.user.pseudo}`" />
                     </div>
                     
                     <!-- afficher vidéo/audio -->
                     <div v-if="post.img_url !='' && ( post.img_url.includes('.mp4') || post.img_url.includes('.wav') || post.img_url.includes('.mov')) " class="mx-auto embed-responsive embed-responsive-16by9 text-center">
                         
-                        <video class="embed-responsive-item mx-auto" muted :src="getImage (index)" :alt="`video illustration ${post.User.pseudo} `" allowfullscreen controls/>
+                        <video class="embed-responsive-item mx-auto" muted :src="getImage (index)" :alt="`video illustration ${post.user.pseudo} `" allowfullscreen controls/>
                         
                     </div>
 
@@ -122,7 +122,7 @@
                         <div class="form-floating">
                             <!--input ajouter commentaire -->
                             <input  @change="loadComment(index)" class="form-control " type="text" :id="`commentaire${post.id}`" name="commentaire" placeholder="Ecrivez une commentaire" />
-                            <label :for="`commentaire${post.id}`">Ecrivez une commentaire</label>
+                            <label :for="`commentaire${post.id}`">Ecrivez un commentaire</label>
                         </div>
 
                         <!-- afficher commentaires -->
@@ -136,7 +136,7 @@
                                 </div>
 
                                 <!-- Les commentaires -->
-                                <p class="px-3 align-self-center">{{commentaire.commentaires}}</p>
+                                <p class="px-3 align-self-center">{{commentaire.commentaire}}</p>
                             </div>
                         
                     </div>
@@ -329,6 +329,7 @@ export default {
     computed: {
       ...mapState ( {
             user: state => state.user,
+            post: state => state.post
       } ),
 
     },
